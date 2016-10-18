@@ -20,6 +20,9 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
 
+import java.io.UnsupportedEncodingException;
+import java.util.Date;
+
 /**
  * Handler implementation for the echo client.  It initiates the ping-pong
  * traffic between the echo client and server by sending the first message to
@@ -27,31 +30,36 @@ import io.netty.channel.ChannelHandlerContext;
  */
 public class EchoClientHandler extends ChannelHandlerAdapter {
 
-    private final ByteBuf firstMessage;
+    private byte[] req;
+
+    private int    counter;
 
     /**
      * Creates a client-side handler.
      */
     public EchoClientHandler() {
-        firstMessage = Unpooled.buffer(EchoClient.SIZE);
-        for (int i = 0; i < firstMessage.capacity(); i ++) {
-            firstMessage.writeByte((byte) i);
-        }
+        String s = "QUERY TIME" + System.getProperty("line.separator");
+        req = s.getBytes();
     }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
-        ctx.writeAndFlush(firstMessage);
+        ByteBuf msg;
+        for (int i = 0; i < 100; i++) {
+            msg = Unpooled.buffer(req.length);
+            msg.writeBytes(req);
+            ctx.writeAndFlush(msg);
+        }
     }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        ctx.write(msg);
+        System.out.println("Now is : " + msg + " counter : " + ++counter);
     }
 
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) {
-       ctx.flush();
+        ctx.flush();
     }
 
     @Override

@@ -15,9 +15,14 @@
  */
 package io.netty.example.echo;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
+
+import java.io.UnsupportedEncodingException;
+import java.util.Date;
 
 /**
  * Handler implementation for the echo server.
@@ -25,9 +30,18 @@ import io.netty.channel.ChannelHandlerContext;
 @Sharable
 public class EchoServerHandler extends ChannelHandlerAdapter {
 
+    public static final int SEPARATOR_LENGTH = System.getProperty("line.separator").length();
+
+    private int             counter;
+
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        ctx.write(msg);
+        String body = (String) msg;
+        System.out.println("received : " + body + " counter : " + ++counter);
+        String currentTime = "QUERY TIME".equalsIgnoreCase(body) ? new Date().toString() : "BAD";
+        currentTime = currentTime + System.getProperty("line.separator");
+        ByteBuf resp = Unpooled.copiedBuffer(currentTime.getBytes());
+        ctx.write(resp);
     }
 
     @Override
